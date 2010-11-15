@@ -1,0 +1,58 @@
+<?php
+
+/**
+ * @file
+ * Install file.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function pubsub_cron_install() {
+  drupal_install_schema('pubsub_cron');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function pubsub_cron_uninstall() {
+  drupal_uninstall_schema('pubsub_cron');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function pubsub_cron_schema() {
+  $schema = array();
+  
+  $schema['pubsub_cron'] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'message' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'args' => array(
+        'type' => 'text',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'created' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+
+  return $schema;
+}

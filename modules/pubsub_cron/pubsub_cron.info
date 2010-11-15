@@ -1,0 +1,3 @@
+name = PubSub Cron
+description = Publish events to cron.
+core = 6.x

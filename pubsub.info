@@ -1,0 +1,3 @@
+name = PubSub API
+description = API for publishing and subscribing to arbitrary messages.
+core = 6.x

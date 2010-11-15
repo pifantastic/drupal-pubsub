@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * Publish a message to potential subscribers.
+ * 
+ * Messages are expanded and sent to all subscribers. For example:
+ *
+ * Calling the following method:
+ *   pubsub_pub('foo.bar.baz');
+ *
+ * Will execute the following hooks:
+ *   hook_pubsub('foo.bar.baz');
+ *   hook_pubsub_foo('bar.baz');
+ *   hook_pubsub_foo_bar('baz'); 
+ *
+ * @param string $message
+ *   The message to publish.
+ *
+ * @param array $args
+ *   An array of values that will be passed to the subscribers.
+ */
+function pubsub_pub($message) {
+  $args = func_get_args();
+  unset($args[0]);
+  
+  $hooks = array();
+  $hooks['pubsub'] = $message;
+  
+  while ($pos = strpos($message, '.')) {
+    list ($sub, $msg) = explode('.', $message, 2);
+    if ($msg) {
+      $hooks["pubsub_$sub"] = $msg;
+      $message[$pos] = '_';
+    }
+  }
+  
+  foreach ($hooks as $hook => $message) {
+    foreach (module_implements($hook) as $module) {
+      try {
+        call_user_func_array($module . '_' . $hook, $args);
+      } catch (PubSubAbortException $e) {
+        return;
+      }
+    }
+  }
+}
+
+/**
+ * Throw this exception to prevent any more subscribers
+ * from subscribing to an event.
+ */
+class PubSubAbortException {}

@@ -1,0 +1,39 @@
+<?php
+
+/**
+ * Implementation of hook_pubsub_SUBSCRIBER().
+ */
+function pubsub_cron_pubsub_cron($message) {
+  // Serialize args so we can store them in the database.
+  $args = func_get_args();
+  unset($args[0]);
+  $serialized_args = serialize($args);
+  
+  // Create a unique id to prevent duplicates.
+  $id = md5($serialized_args);
+  
+  // Save this message.
+  $object = (object) array(
+    'id' => $id,
+    'args' => $serialized_args,
+    'message' => $message,
+    'created' => $_SERVER['REQUEST_TIME'],
+  );     
+  @drupal_write_record('pubsub_cron', $object);
+}
+
+/**
+ * Implementation of hook_cron().
+ */
+function pubsub_cron_cron() {
+  // Get pending messages.
+  $result = db_query("SELECT id, args, message FROM {pubsub_cron} ORDER BY created ASC");
+  
+  // Execute subscribers for all pending messages.
+  while ($message = db_fetch_object($result)) {
+    // Republish.
+    $args = unserialize($message->args);
+    pubsub_pub($message->message, $args);
+    db_query("DELETE FROM {pubsub_cron} WHERE id = '%s'", $message->id);
+  }
+}
